@@ -5,7 +5,7 @@
 This programme will take an input array of peaks in 1D I vs q data (such as those returned from the finder programme),
 and returns a dictionary of possible phases that the data can take on, along with the miller plane index and the peaks 
 used to for that possible phase assignment. Also needs to be passed is a threshold for the number of binned values in 
-the histogram.
+the histogram. A value of around 8 should suffice for this purpose.
 """
 
 
@@ -214,11 +214,9 @@ def main(peaks,bin_factor,threshold,lo_q):
     QIIG_ratios=np.array([6,8,14,16,20,22])
 
     phases=possible_phases(peaks,1,threshold)
-    print(phases)
     clar={}
     for value in phases.items():
         fundamental=np.mean(value[1][2]/np.sqrt(value[1][1]))
-        print(fundamental)
         if value[1][0]==0:
             test1=projection_testing(QIID_ratios,fundamental,peaks,lo_q)
             if test1==1:
