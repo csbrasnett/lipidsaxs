@@ -19,6 +19,7 @@ more of an idea about the kind of way that matplotlib can plot something like th
 
 
 import numpy as np
+import matplotlib.pyplot as plt
 """
 La_HII_possible_phases works similarly to Q_possible_phases, in that it uses a statistical methodology to work out which peaks can 
 be assigned to which phase. However, as fewer peaks are expected to be passed to this module, it simply determines the phase by finding
@@ -116,8 +117,8 @@ def Q_possible_phases(peaks,bin_factor, threshold):
         
     #define the characteristic peak ratios
     QIID=np.array([2,3,4,6,8,9,10,11])[:,np.newaxis]
-    QIIP=np.array([2,4,6,8,10,12,14,16])[:,np.newaxis]
-    QIIG=np.array([6,8,14,16,20,22,24,26])[:,np.newaxis]
+    QIIP=np.array([2,4,6,8,10,12,14])[:,np.newaxis]
+    QIIG=np.array([6,8,14,16,20,22,24])[:,np.newaxis]
     
     QIID_ratios=np.sqrt(QIID)
     QIIP_ratios=np.sqrt(QIIP)
@@ -140,7 +141,8 @@ def Q_possible_phases(peaks,bin_factor, threshold):
     
     #histogram the data so that we have some bins
     hist, bin_edges=np.histogram(values,bins=bin_factor*np.size(values))
-    
+    plt.hist(values,bins=bin_factor*np.size(values))
+    plt.show()
     #digitise the data (see numpy docs for explanations)
     inds=np.digitize(values,bin_edges)
     
@@ -152,7 +154,9 @@ def Q_possible_phases(peaks,bin_factor, threshold):
             #find the values from the values array which are actually present in each bin and put them in the values array
             binned_values=values[np.where(inds==i)]
             #this size filtering is completely arbitrary. 
-            if np.size(binned_values)>threshold:                
+            if np.size(binned_values)>threshold:             
+                print('\n',binned_values)
+                
                 #trace where the values in the bin originated from in the arrays.
                 positions_array=np.zeros(0)
                 for k in range(0, np.size(binned_values)):
@@ -166,7 +170,9 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                 D_factors=np.where(final_pos_array<len(D))[0][0:]
                 P_factors=(np.where(final_pos_array<=(len(P)+len(D))-1)[0][0:])[len(D_factors):]
                 G_factors=np.where(final_pos_array>(len(P)+len(D))-1)[0][0:]
-     
+                
+                print(D_factors,P_factors)
+                
                 #correspond the positions in the factors arrays to where they come from in the final positions array            
                 D_sourced=final_pos_array[D_factors].astype(int)
                 P_sourced=final_pos_array[P_factors].astype(int)
@@ -187,32 +193,46 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                 for a in range(0,len(D_sourced)):
                     D_hkl=QIID[np.where(np.mod(D_sourced[a],np.size(n))==n)[0]][0][0]
                     D_peak_hkl=peaks[np.where(np.mod(D_sourced[a],np.size(n))==n)[1]][0]
-                    
+                    print('D',D_hkl,D_peak_hkl)
                     D_sourced_factors=np.append(D_sourced_factors,np.int(D_hkl))
                     D_sourced_peaks=np.append(D_sourced_peaks,D_peak_hkl)
-                    
-                #only save the phase (as number: D=0, P=1,G=2), and related data to the returned dictionary if there are more than 3 peaks in there.
-                if len(D_sourced_factors) >3:
-                    phase_dict[values[D_sourced[a]]] = 0, D_sourced_factors, D_sourced_peaks
                     
                 for b in range(0,len(P_sourced)):
                     P_hkl=QIIP[np.where(np.mod(P_sourced[b],np.size(n))==n)[0]][0][0]
                     P_peak_hkl=peaks[np.where(np.mod(P_sourced[b],np.size(n))==n)[1]][0]
-                    
+                    print('P',P_hkl,P_peak_hkl)
                     P_sourced_factors=np.append(P_sourced_factors,P_hkl)
                     P_sourced_peaks=np.append(P_sourced_peaks,P_peak_hkl)
-                if len(P_sourced_factors) >3:
-                    phase_dict[values[P_sourced[b]]] = 1, P_sourced_factors, P_sourced_peaks
-                    
+
                 for c in range(0,len(G_sourced)):
                     G_hkl=QIIG[np.where(np.mod(G_sourced[c],np.size(n))==n)[0]][0][0]
                     G_peak_hkl=peaks[np.where(np.mod(G_sourced[c],np.size(n))==n)[1]][0]
                     
                     G_sourced_factors=np.append(G_sourced_factors,G_hkl)
                     G_sourced_peaks=np.append(G_sourced_peaks,G_peak_hkl)
+                
+                #only save the phase (as number: D=0, P=1,G=2), and related data to the returned dictionary if there are more than 3 peaks in there.
+                '''
+                CSB note to self: there is a problem here in the ordering: there needs to be a comparison of which 
+                factors have been assigned to which peak. They should be degenerate for phases which have corresponding
+                peak hkl factors (eg. D and P) but the fact that there is an ordering means that they are not saved 
+                separately - and only the last phase is actually identified! Fix this asap!
+                '''
+                
+                if len(D_sourced_factors) >3:
+                    print('D thing', values[D_sourced[a]])
+                    phase_dict[values[D_sourced[a]]] = 0, D_sourced_factors, D_sourced_peaks                
+                
+                if len(P_sourced_factors) >3:
+                    print('P thing', values[P_sourced[b]])
+                    phase_dict[values[P_sourced[b]]] = 1, P_sourced_factors, P_sourced_peaks                
+                
                 if len(G_sourced_factors) >3:
                     phase_dict[values[G_sourced[c]]] = 2, G_sourced_factors, G_sourced_peaks
                
+                
+                
+                
         except IndexError:
             pass
     return phase_dict
@@ -243,7 +263,7 @@ pass the following parameters to this function:
 
 """
 
-def projection_testing(phase_array, fundamental, peak_array,lo_q):
+def Q_projection_testing(phase_array, fundamental, peak_array,lo_q):
     #now project the fundamental q value over the phase
     projected_values=(np.sqrt(phase_array)*fundamental)[:,np.newaxis]
     #check that the first projected peak is within the finding q width:
@@ -258,7 +278,7 @@ def projection_testing(phase_array, fundamental, peak_array,lo_q):
         matches=np.where(matching<0.001)[0]
         #matches1=np.where(matching<0.001)[1]
 
-        if np.abs(len(projected_values)-len(projected_values[np.unique(matches)]))<2:
+        if np.abs(len(projected_values)-len(projected_values[np.unique(matches)]))<3:
             return 1
     #if the lowest peak is not in the desired q range
     else:
@@ -281,34 +301,48 @@ pass the following parameters to this function:
     lo_q      - the same low limit in q that was used to define the width in which peaks are to be found
 
 """
-def main(peaks,bin_factor,threshold,lo_q):
+def Q_main(peaks,bin_factor,threshold,lo_q):
 
     QIID_ratios=np.array([2,3,4,6,8,9,10,11])
-    QIIP_ratios=np.array([2,4,6,8,10,12,14,16])
-    QIIG_ratios=np.array([6,8,14,16,20,22,24,26])
+    QIIP_ratios=np.array([2,4,6,8,10,12,14])
+    QIIG_ratios=np.array([6,8,14,16,20,22,24])
         
     phases=Q_possible_phases(peaks,1,threshold)
+    for key in phases.keys():
+        print('\n',key, phases[key])
     clar={}
     for value in phases.items():
         fundamental=np.mean(value[1][2]/np.sqrt(value[1][1]))
         if value[1][0]==0:
-            test1=projection_testing(QIID_ratios,fundamental,peaks,lo_q)
+            test1=Q_projection_testing(QIID_ratios,fundamental,peaks,lo_q)
             if test1==1:
                 clar['D']=value[0],value[1][1],value[1][2]
         if value[1][0]==1:
-            test2=projection_testing(QIIP_ratios,fundamental,peaks,lo_q)
+            test2=Q_projection_testing(QIIP_ratios,fundamental,peaks,lo_q)
             if test2==1:
                 clar['P']=value[0],value[1][1],value[1][2]
         if value[1][0]==2:
-            test3=projection_testing(QIIG_ratios,fundamental,peaks,lo_q)
+            test3=Q_projection_testing(QIIG_ratios,fundamental,peaks,lo_q)
             if test3==1:
                 clar['G']=value[0],value[1][1],value[1][2]
     return clar
 
-#QIIP=np.sqrt(np.array([2,4,6,8,10]))
-#fundamental=0.06
-#Q_peaks=np.random.normal((QIIP*fundamental),0.0001)
-#Q_test=main(Q_peaks,2,5,0.06)
-#print('some example QIIP peaks', Q_peaks)
-#print('results of Q test', Q_test)
+'''
+start from the main: pass the low_q condition as the same value from finder.py, this will then perform the phase 
+assignment routines based on how many peaks were found. (see comment at top.)
+'''
+
+def main(peaks,low_q):
+    if len(peaks)<4:
+        ID=La_HII_possible_phases(peaks,2)
+    else:
+        ID=Q_main(peaks,2,10,low_q)
+    return ID
+        
+QIID=np.sqrt(np.array([2,3,4,6,8,9,10]))
+fundamental=0.06
+Q_peaks=(QIID*fundamental)
+print('some example QIID peaks', Q_peaks)
+Q_test=main(Q_peaks,0.06)
+print('\nresults of Q test', Q_test)
 
