@@ -115,7 +115,7 @@ pass the following parameters to this function:
 def Q_possible_phases(peaks,bin_factor, threshold):
         
     #define the characteristic peak ratios
-    QIID=np.array([2,3,4,6,8,9,10,12])[:,np.newaxis]
+    QIID=np.array([2,3,4,6,8,9,10,11])[:,np.newaxis]
     QIIP=np.array([2,4,6,8,10,12,14,16])[:,np.newaxis]
     QIIG=np.array([6,8,14,16,20,22,24,26])[:,np.newaxis]
     
@@ -225,7 +225,9 @@ value, the peaks in q which should exist can be calculated. These proposed peaks
 which actually exist in the data. This is done through constructing a difference matrix, populated by the differences between
 the peaks in the projected and physical arrays. The matrix is then searched for where the value is very small - ie. the proposed
 peak is present in the physical data. If all or all but one or two of the proposed peaks are present in the physical data, 
-then it is said that that phase proposed is real, and not a feature of degenerate symmetry in the data.
+then it is said that that phase proposed is real, and not a feature of degenerate symmetry in the data. NB! you might want to 
+change the number of peaks that are acceptably omissible depending on how successful you are. Alternatively: change the 
+number of peak indicies used for calculations throughout the code. 
 
 pass the following parameters to this function:
     
@@ -281,9 +283,9 @@ pass the following parameters to this function:
 """
 def main(peaks,bin_factor,threshold,lo_q):
 
-    QIID_ratios=np.array([2,3,4,6,8,9])
-    QIIP_ratios=np.array([2,4,6,8,10,12])
-    QIIG_ratios=np.array([6,8,14,16,20,22])
+    QIID_ratios=np.array([2,3,4,6,8,9,10,11])
+    QIIP_ratios=np.array([2,4,6,8,10,12,14,16])
+    QIIG_ratios=np.array([6,8,14,16,20,22,24,26])
         
     phases=Q_possible_phases(peaks,1,threshold)
     clar={}
