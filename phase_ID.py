@@ -343,8 +343,6 @@ def Q_main(peaks,bin_factor,threshold,lo_q):
     clar={}
 
     for key in phases.keys():
-        print('\n',key)
-        print(phases[key][0],phases[key][1],phases[key][2])
         fundamental=np.mean(phases[key][2]/np.sqrt(phases[key][1]))
         if key ==0:
             D_projection=Q_projection_testing(QIID_ratios,fundamental,peaks,lo_q)
