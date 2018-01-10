@@ -15,6 +15,8 @@ bottom of the code to see how it functions/what results to expect.
 The information passed to the dictionary at the end should be enough to plot I vs q data with information about which peak has been
 indexed as which, along with information about the lattice parameter and phase. See the optional plot in the finder.py programme for
 more of an idea about the kind of way that matplotlib can plot something like this, using a combination of plt.axvline and plt.text.
+
+At the bottom of this programme there is an example set of data that can be run through to see what result to expect at the end.
 """
 
 
@@ -370,11 +372,23 @@ def main(peaks,low_q):
     else:
         ID=Q_main(peaks,2,10,low_q)
     return ID
-        
-QIIP=np.sqrt(np.array([2,4,6,8,10,12,14]))
-fundamental=0.06
-Q_peaks=(QIIP*fundamental)
-print('some example QIIP peaks', Q_peaks)
-Q_test=main(Q_peaks,0.06)
-print('\nresults of Q test', Q_test)
 
+'''
+#here is some example fake data which can be used to test the programme to see the expected output.
+#there is a Bonnet ratio linked QIIP and QIID phase, demonstrating that the phases can be *both* correctly identified
+#from a set of peaks passed to the main function in this programme 
+
+fundamental=0.06        
+QIIP=np.sqrt(np.array([2,4,6,8,10,12,14]))
+QIIP_peaks=np.random.normal(QIIP*fundamental,0.0005)
+QIID=np.sqrt(np.array([2,3,4,6,8,9,10,11]))
+QIID_peaks=np.random.normal(QIID*fundamental*1.28,0.0005)
+
+coexisting_Q_peaks=np.sort(np.concatenate((QIIP_peaks,QIID_peaks)))
+print('P peaks, exact and slightly randomised: ',QIIP*fundamental,QIIP_peaks)
+print('D peaks, exact and slightly randomised', QIID*fundamental*1.28, QIID_peaks)
+print('coexisting D, P peaks: ', coexisting_Q_peaks)
+
+Q_test=main(coexisting_Q_peaks,0.06)
+print('\nresults of Q test:', Q_test)
+'''
