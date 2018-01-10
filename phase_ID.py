@@ -9,20 +9,17 @@ Lamellar/Inverse Hexagonal ones. It is recommended that having used the peak fin
 by using the number of peaks found in the data. In general from the author's experience, the La and HII phases produce fewer Bragg peaks,
 such that if a condition were used along the lines of if len(peaks)<3: La_HII_possible_phases(peaks, etc) else: Q_possible_phases(peaks etc)
 then there should be a good chance of assigning the correct phase. Otherwise there is a risk of simultaneously assigning the HII along 
-with a cubic one. Worst comes to worst... The old fashioned hand method won't fail... a quick example set of imaginary data are at the
-bottom of the code to see how it functions/what results to expect.
+with a cubic one. Worst comes to worst... The old fashioned hand method won't fail... 
 
 The information passed to the dictionary at the end should be enough to plot I vs q data with information about which peak has been
 indexed as which, along with information about the lattice parameter and phase. See the optional plot in the finder.py programme for
 more of an idea about the kind of way that matplotlib can plot something like this, using a combination of plt.axvline and plt.text.
 
-At the bottom of this programme there is an example set of data that can be run through to see what result to expect at the end.
+At the bottom of this programme there is an example set of data in a comment that can be run through to see what result to expect at the end.
 """
 
 
 import numpy as np
-#import matplotlib.pyplot as plt
-
 
 """
 La_HII_possible_phases works similarly to Q_possible_phases, in that it uses a statistical methodology to work out which peaks can 
@@ -127,16 +124,18 @@ def Q_possible_phases(peaks,bin_factor, threshold):
     QIID_ratios=np.sqrt(QIID)
     QIIP_ratios=np.sqrt(QIIP)
     QIIG_ratios=np.sqrt(QIIG)
-    
-    #1) create matrices of all possible lattice parameter values
-    #2) flatten each matrix to one dimension
-    #3) combine the matricies into one
+    '''
+    1) create matrices of all possible lattice parameter values
+    2) flatten each matrix to one dimension
+    3) combine the matricies into one
+    '''
     D_init = 2*np.pi*(1/peaks)*QIID_ratios
     P_init = 2*np.pi*(1/peaks)*QIIP_ratios
     G_init = 2*np.pi*(1/peaks)*QIIG_ratios
-
-    #n_D, n_P, n_G are arrays of integers running from 0 to the size of the respective initial arrays. They will be used later
-    #on to determine the source of where matching lattice parameter values have arisen from.
+    '''
+    n_D, n_P, n_G are arrays of integers running from 0 to the size of the respective initial arrays. They will be used later
+    on to determine the source of where matching lattice parameter values have arisen from.
+    '''
     n_D=np.reshape(np.arange(0,np.size(D_init)),np.shape(D_init))
     n_P=np.reshape(np.arange(0,np.size(P_init)),np.shape(P_init))
     n_G=np.reshape(np.arange(0,np.size(G_init)),np.shape(G_init))
@@ -184,10 +183,12 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                 P_sourced=final_pos_array[P_factors].astype(int)
                 G_sourced=final_pos_array[G_factors].astype(int)
                 
-                #want to find where the matching phases have come from in the array to see which one is the real one.
-                #e.g. np.mod(o_sourced[a],n) corrects the position in the o array for running the same length as the sourced array
-                #then find where the value is the same to identify the row
-                #then find from which ratio factor the peak originated from.         
+                '''
+                want to find where the matching phases have come from in the array to see which one is the real one.
+                e.g. np.mod(o_sourced[a],n) corrects the position in the o array for running the same length as the sourced array
+                then find where the value is the same to identify the row
+                then find from which ratio factor the peak originated from.         
+                '''
                 D_sourced_factors=np.zeros(0,dtype=np.int)
                 P_sourced_factors=np.zeros(0,dtype=np.int)
                 G_sourced_factors=np.zeros(0,dtype=np.int)
@@ -229,11 +230,12 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                     G_sourced_factors=np.append(G_sourced_factors,np.int(G_hkl))
                     G_sourced_peaks=np.append(G_sourced_peaks,G_peak_hkl)                
                 
-                
-                #only save the phase (as keyed number: D=0, P=1,G=2), and related data to the returned dictionary if 
-                #there are more than 3 peaks in there.      
-                #as the coincidence of factors between the QIID and QIIP is high, attempt to clarify which phase
-                #is actually present if the same factors have been assigned to the same peaks.
+                '''
+                Only save the phase (as keyed number: D=0, P=1,G=2), and related data to the returned dictionary if 
+                there are more than 3 peaks in there.      
+                As the coincidence of factors between the QIID and QIIP is high, attempt to clarify which phase
+                is actually present if the same factors have been assigned to the same peaks.
+                '''
                 if len(D_sourced_factors) >3 and len(P_sourced_factors) >3:
                     lp=np.mean((np.mean(values[D_sourced]),np.mean(values[P_sourced])))
                     #find which set of values is longer and which is shorter
@@ -252,8 +254,10 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                     #find which pairs of peaks and factors have been assigned.
                     matching_factors=np.intersect1d(shorter_factors,longer_factors)
                     matching_peaks=np.intersect1d(shorter_peaks,longer_peaks)
-                    #if the shorter set of factors is completely incidental into the longer set, then
-                    #the phase can be assigned as being the longer set of factors.
+                    '''
+                    if the shorter set of factors is completely incidental into the longer set, then
+                    the phase can be assigned as being the longer set of factors.
+                    '''
                     if (len(matching_factors)==len(shorter_factors)) and (len(matching_peaks)==len(shorter_peaks)):
                         phase_dict[switch]=lp,longer_factors,longer_peaks
 
@@ -304,12 +308,12 @@ def Q_projection_testing(phase_array, fundamental, peak_array,lo_q):
 
         #create a difference matrix, examining the difference in the proposed and existant peaks.     
         matching=np.abs(np.subtract(projected_values,peak_array))
-      
-        #the matches vavriable is an evaluation of where peaks that have been projected correspond to peaks that actually exist.
-        #arbitrarily, if the difference in the lengths of the arrays is less than 2, (Ie. all peaks are present or only one or two 
-        #are missing in the data) then return a confirmation that the phase is a real assignment of the peaks.
+        '''
+        the matches vavriable is an evaluation of where peaks that have been projected correspond to peaks that actually exist.
+        arbitrarily, if the difference in the lengths of the arrays is less than 2, (Ie. all peaks are present or only one or two 
+        are missing in the data) then return a confirmation that the phase is a real assignment of the peaks.
+        '''
         matches=np.where(matching<0.001)[0]
-        #matches1=np.where(matching<0.001)[1]
 
         if np.abs(len(projected_values)-len(projected_values[np.unique(matches)]))<3:
             return 1
@@ -387,7 +391,7 @@ QIID_peaks=np.random.normal(QIID*fundamental*1.28,0.0005)
 coexisting_Q_peaks=np.sort(np.concatenate((QIIP_peaks,QIID_peaks)))
 print('P peaks, exact and slightly randomised: ',QIIP*fundamental,QIIP_peaks)
 print('D peaks, exact and slightly randomised', QIID*fundamental*1.28, QIID_peaks)
-print('coexisting D, P peaks: ', coexisting_Q_peaks)
+print('coexisting (randomised) D, P peaks: ', coexisting_Q_peaks)
 
 Q_test=main(coexisting_Q_peaks,0.06)
 print('\nresults of Q test:', Q_test)
