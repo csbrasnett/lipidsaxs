@@ -113,7 +113,6 @@ pass the following parameters to this function:
 
 
 """
-
 def Q_possible_phases(peaks,bin_factor, threshold):
         
     #define the characteristic peak ratios
@@ -150,7 +149,7 @@ def Q_possible_phases(peaks,bin_factor, threshold):
     
     #histogram the data so that we have some bins
     hist, bin_edges=np.histogram(values,bins=bin_factor*np.size(values))
-
+    
     #digitise the data (see numpy docs for explanations)
     inds=np.digitize(values,bin_edges)
     
@@ -345,9 +344,8 @@ def Q_main(peaks,bin_factor,threshold,lo_q):
     QIIG_ratios=np.array([6,8,14,16,20,22,24])
         
     phases=Q_possible_phases(peaks,1,threshold)
-
+    
     clar={}
-
     for key in phases.keys():
         fundamental=np.mean(phases[key][2]/np.sqrt(phases[key][1]))
         if key ==0:
@@ -376,7 +374,6 @@ def main(peaks,low_q):
     else:
         ID=Q_main(peaks,2,10,low_q)
     return ID
-
 '''
 #here is some example fake data which can be used to test the programme to see the expected output.
 #there is a Bonnet ratio linked QIIP and QIID phase, demonstrating that the phases can be *both* correctly identified
@@ -385,14 +382,15 @@ def main(peaks,low_q):
 fundamental=0.06        
 QIIP=np.sqrt(np.array([2,4,6,8,10,12,14]))
 QIIP_peaks=np.random.normal(QIIP*fundamental,0.0005)
-QIID=np.sqrt(np.array([2,3,4,6,8,9,10,11]))
+
+QIID=np.sqrt(np.array([2,3,4,6,8,9,10]))
 QIID_peaks=np.random.normal(QIID*fundamental*1.28,0.0005)
 
 coexisting_Q_peaks=np.sort(np.concatenate((QIIP_peaks,QIID_peaks)))
-print('P peaks, exact and slightly randomised: ',QIIP*fundamental,QIIP_peaks)
-print('D peaks, exact and slightly randomised', QIID*fundamental*1.28, QIID_peaks)
-print('coexisting (randomised) D, P peaks: ', coexisting_Q_peaks)
+#print('P peaks, exact and slightly randomised: ',QIIP*fundamental,QIIP_peaks)
+#print('D peaks, exact and slightly randomised', QIID*fundamental*1.28, QIID_peaks)
+#print('coexisting (randomised) D, P peaks: ', coexisting_Q_peaks)
 
-Q_test=main(coexisting_Q_peaks,0.06)
-print('\nresults of Q test:', Q_test)
+Q_test=main(QIID_peaks,0.06)
+print(Q_test)
 '''
