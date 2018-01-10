@@ -171,20 +171,16 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                 #look at the distribution of the origin of the arrays - they should be group dependent on the phase.
                 #D_sourced, P_sourced, G_sourced are the positions in the values array where the matching peaks have come from
                 final_pos_array=np.unique(positions_array)
-                #print('\n\nfinal pos array', final_pos_array)
                 
                 #split the positions up into which cubic phase calculation they have come from.         
                 D_factors=np.where(final_pos_array<np.size(D))[0][0:]
                 P_factors=(np.where(final_pos_array<=(np.size(P)+np.size(D))-1)[0][0:])[np.size(D_factors):]
                 G_factors=np.where(final_pos_array> (np.size(P)+np.size(D))-1)[0][0:]
                 
-                
                 #correspond the positions in the factors arrays to where they come from in the final positions array            
                 D_sourced=final_pos_array[D_factors].astype(int)
                 P_sourced=final_pos_array[P_factors].astype(int)
                 G_sourced=final_pos_array[G_factors].astype(int)
-                
-                print(D_sourced,P_sourced,G_sourced)
                 
                 #want to find where the matching phases have come from in the array to see which one is the real one.
                 #e.g. np.mod(o_sourced[a],n) corrects the position in the o array for running the same length as the sourced array
@@ -202,66 +198,72 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                     D_array_position=D_sourced[a]
                     D_array_comparison_pos=np.mod(D_array_position,np.size(D))
                     D_position=np.where(D_array_comparison_pos==n)
-                    
+              
                     D_hkl=QIID[D_position[0][0]][0]
                     D_peak_hkl=peaks[D_position[1][0]]
-                    print('D',a,D_hkl,D_peak_hkl)
+
                     D_sourced_factors=np.append(D_sourced_factors,np.int(D_hkl))
                     D_sourced_peaks=np.append(D_sourced_peaks,D_peak_hkl)
                 
-                print('\n')
-                
-                '''
-                PROBLEM TO FIX: need to work out the correct modulus value for each array to bring the values back to 
-                the start to be self consistent for finding the positions such that the peak and index from which 
-                the matching value arose in the first place can be identified correctly.
-                
-                At the moment, for some values determined by the sizes of the D,P,G arrays, there is a problem that
-                the array position in the 1D combined array is not correctly modulo-ed down so the comparison can be 
-                performed correctly, which breaks the cycle.
-                '''                
                 for b in range(0,len(P_sourced)):                    
                     P_array_position=P_sourced[b]
-                    P_array_comparison_pos=np.mod(P_array_position,np.size(D))
+                    P_array_comparison_pos=P_array_position-np.size(D)
                     P_position=np.where(P_array_comparison_pos==n)
-                    
+
                     P_hkl=QIIP[P_position[0][0]][0]
                     P_peak_hkl=peaks[P_position[1][0]]
-                    print('P',b,P_hkl,P_peak_hkl)
+                    
                     P_sourced_factors=np.append(P_sourced_factors,np.int(P_hkl))
                     P_sourced_peaks=np.append(P_sourced_peaks,P_peak_hkl)
                 
-                print(len(G_sourced))
                 for c in range(0,len(G_sourced)):
                     G_array_position=G_sourced[c]
-                    G_array_comparison_pos=np.mod(G_array_position,np.size(D))
+                    G_array_comparison_pos=G_array_position-np.size(P)-np.size(D)
                     G_position=np.where(G_array_comparison_pos==n)
-                    print(G_array_position,G_array_comparison_pos,G_position)
                     
                     G_hkl=QIIG[G_position[0][0]][0]
                     G_peak_hkl=peaks[G_position[1][0]]
-                    print('G',c,G_hkl,G_peak_hkl)
+
                     G_sourced_factors=np.append(G_sourced_factors,np.int(G_hkl))
                     G_sourced_peaks=np.append(G_sourced_peaks,G_peak_hkl)                
-                #only save the phase (as number: D=0, P=1,G=2), and related data to the returned dictionary if there are more than 3 peaks in there.
-                
-                '''
-                PROBLEM TO FIX: there is a problem here in the ordering: there needs to be a comparison of which 
-                factors have been assigned to which peak. They should be degenerate for phases which have corresponding
-                peak hkl factors (eg. D and P) but the fact that there is an ordering means that they are not saved 
-                separately - and only the last phase is actually identified! Fix this asap!
-                '''
                 
                 
-                if len(D_sourced_factors) >3:
+                #only save the phase (as keyed number: D=0, P=1,G=2), and related data to the returned dictionary if 
+                #there are more than 3 peaks in there.      
+                #as the coincidence of factors between the QIID and QIIP is high, attempt to clarify which phase
+                #is actually present if the same factors have been assigned to the same peaks.
+                if len(D_sourced_factors) >3 and len(P_sourced_factors) >3:
+                    lp=np.mean((np.mean(values[D_sourced]),np.mean(values[P_sourced])))
+                    #find which set of values is longer and which is shorter
+                    if len(D_sourced_factors)>len(P_sourced_factors):
+                        shorter_factors=P_sourced_factors
+                        shorter_peaks=P_sourced_peaks
+                        longer_factors=D_sourced_factors
+                        longer_peaks=D_sourced_peaks
+                        switch=0
+                    else:
+                        shorter_factors=D_sourced_factors
+                        shorter_peaks=D_sourced_peaks
+                        longer_factors=P_sourced_factors
+                        longer_peaks=P_sourced_peaks
+                        switch=1
+                    #find which pairs of peaks and factors have been assigned.
+                    matching_factors=np.intersect1d(shorter_factors,longer_factors)
+                    matching_peaks=np.intersect1d(shorter_peaks,longer_peaks)
+                    #if the shorter set of factors is completely incidental into the longer set, then
+                    #the phase can be assigned as being the longer set of factors.
+                    if (len(matching_factors)==len(shorter_factors)) and (len(matching_peaks)==len(shorter_peaks)):
+                        phase_dict[switch]=lp,longer_factors,longer_peaks
+
+                elif len(D_sourced_factors) >3 and len(P_sourced_factors) <3:
                     phase_dict[0] = np.mean(values[D_sourced]), D_sourced_factors, D_sourced_peaks                
                 
-                if len(P_sourced_factors) >3:
+                elif len(D_sourced_factors) <3 and len(P_sourced_factors) >3:
                     phase_dict[1] = np.mean(values[P_sourced]), P_sourced_factors, P_sourced_peaks                
                 
                 if len(G_sourced_factors) >3:
                     phase_dict[2] = np.mean(values[G_sourced]), G_sourced_factors, G_sourced_peaks
-               
+
         except IndexError:
             pass
     return phase_dict
@@ -339,32 +341,24 @@ def Q_main(peaks,bin_factor,threshold,lo_q):
     phases=Q_possible_phases(peaks,1,threshold)
 
     clar={}
-    '''
-    PROBLEM TO FIX HERE: have the dictionary from Q_possible_phases returned such that 0,1,2 =D,P,G respectively in
-    the key, with the lattice parameter, peaks, and indicies in the values for further comparison in the clarification
-    stage.
-    '''
-    
+
     for key in phases.keys():
         print('\n',key)
         print(phases[key][0],phases[key][1],phases[key][2])
-        print(phases[key][2]/np.sqrt(phases[key][1]),np.mean(phases[key][2]/np.sqrt(phases[key][1])))
-
-#    
-#    for value in phases.items():
-#        fundamental=np.mean(value[1][2]/np.sqrt(value[1][1]))
-#        if value[1][0]==0:
-#            test1=Q_projection_testing(QIID_ratios,fundamental,peaks,lo_q)
-#            if test1==1:
-#                clar['D']=value[0],value[1][1],value[1][2]
-#        if value[1][0]==1:
-#            test2=Q_projection_testing(QIIP_ratios,fundamental,peaks,lo_q)
-#            if test2==1:
-#                clar['P']=value[0],value[1][1],value[1][2]
-#        if value[1][0]==2:
-#            test3=Q_projection_testing(QIIG_ratios,fundamental,peaks,lo_q)
-#            if test3==1:
-#                clar['G']=value[0],value[1][1],value[1][2]
+        fundamental=np.mean(phases[key][2]/np.sqrt(phases[key][1]))
+        if key ==0:
+            D_projection=Q_projection_testing(QIID_ratios,fundamental,peaks,lo_q)
+            if D_projection==1:
+                clar['D']=phases[key][0],phases[key][1],phases[key][2]
+        elif key ==1:
+            P_projection=Q_projection_testing(QIIP_ratios,fundamental,peaks,lo_q)
+            if P_projection==1:
+                clar['P']=phases[key][0],phases[key][1],phases[key][2]
+        if key ==0:
+            G_projection=Q_projection_testing(QIIG_ratios,fundamental,peaks,lo_q)
+            if G_projection==1:
+                clar['G']=phases[key][0],phases[key][1],phases[key][2]
+                
     return clar
 
 '''
@@ -379,10 +373,10 @@ def main(peaks,low_q):
         ID=Q_main(peaks,2,10,low_q)
     return ID
         
-QIID=np.sqrt(np.array([2,4,6,8,10,12,14]))
+QIIP=np.sqrt(np.array([2,4,6,8,10,12,14]))
 fundamental=0.06
-Q_peaks=(QIID*fundamental)
-print('some example QIID peaks', Q_peaks)
+Q_peaks=(QIIP*fundamental)
+print('some example QIIP peaks', Q_peaks)
 Q_test=main(Q_peaks,0.06)
 print('\nresults of Q test', Q_test)
 
