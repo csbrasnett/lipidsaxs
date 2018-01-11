@@ -304,16 +304,12 @@ def Q_projection_testing(phase_array, fundamental, peak_array,lo_q):
     projected_values=(np.sqrt(phase_array)*fundamental)[:,np.newaxis]
     #check that the first projected peak is within the finding q width:
     if projected_values[0]>lo_q:
-
-        #create a difference matrix, examining the difference in the proposed and existant peaks.     
-        matching=np.abs(np.subtract(projected_values,peak_array))
         '''
-        the matches vavriable is an evaluation of where peaks that have been projected correspond to peaks that actually exist.
+        the matches variable is an evaluation of where peaks that have been projected correspond to peaks that actually exist.
         arbitrarily, if the difference in the lengths of the arrays is less than 2, (Ie. all peaks are present or only one or two 
         are missing in the data) then return a confirmation that the phase is a real assignment of the peaks.
         '''
-        matches=np.where(matching<0.001)[0]
-
+        matches=np.where(np.abs(np.subtract(projected_values,peak_array))<0.001)[0]
         if np.abs(len(projected_values)-len(projected_values[np.unique(matches)]))<3:
             return 1
     #if the lowest peak is not in the desired q range
@@ -343,8 +339,8 @@ def Q_main(peaks,bin_factor,threshold,lo_q):
     QIIP_ratios=np.array([2,4,6,8,10,12,14])
     QIIG_ratios=np.array([6,8,14,16,20,22,24])
         
-    phases=Q_possible_phases(peaks,1,threshold)
-    
+    phases=Q_possible_phases(peaks,bin_factor,threshold)
+
     clar={}
     for key in phases.keys():
         fundamental=np.mean(phases[key][2]/np.sqrt(phases[key][1]))
@@ -356,7 +352,7 @@ def Q_main(peaks,bin_factor,threshold,lo_q):
             P_projection=Q_projection_testing(QIIP_ratios,fundamental,peaks,lo_q)
             if P_projection==1:
                 clar['P']=phases[key][0],phases[key][1],phases[key][2]
-        if key ==0:
+        elif key ==2:
             G_projection=Q_projection_testing(QIIG_ratios,fundamental,peaks,lo_q)
             if G_projection==1:
                 clar['G']=phases[key][0],phases[key][1],phases[key][2]
@@ -368,11 +364,11 @@ start from the main: pass the low_q condition as the same value from finder.py, 
 assignment routines based on how many peaks were found. (see comment at top.)
 '''
 
-def main(peaks,low_q):
+def main(peaks,lo_q):
     if len(peaks)<4:
         ID=La_HII_possible_phases(peaks,2)
     else:
-        ID=Q_main(peaks,2,10,low_q)
+        ID=Q_main(peaks,2,10,lo_q)
     return ID
 '''
 #here is some example fake data which can be used to test the programme to see the expected output.
@@ -389,8 +385,8 @@ QIID_peaks=np.random.normal(QIID*fundamental*1.28,0.0005)
 coexisting_Q_peaks=np.sort(np.concatenate((QIIP_peaks,QIID_peaks)))
 #print('P peaks, exact and slightly randomised: ',QIIP*fundamental,QIIP_peaks)
 #print('D peaks, exact and slightly randomised', QIID*fundamental*1.28, QIID_peaks)
-#print('coexisting (randomised) D, P peaks: ', coexisting_Q_peaks)
+print('coexisting (randomised) D, P peaks: ', coexisting_Q_peaks)
 
-Q_test=main(QIID_peaks,0.06)
-print(Q_test)
+Q_test=main(coexisting_Q_peaks,0.06)
+print('\ndas ende', Q_test)
 '''

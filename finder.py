@@ -40,10 +40,11 @@ def fitting(x,y,approx_centre,plot):
     Voigt_model=lm.models.VoigtModel(prefix='V_')
     pars.update(Voigt_model.make_params())
     
-    #define the inital Voigt variables: centre as the centre found in the data so far, the width as the width of the 
-    #window in which the peak has been defined, and the amplitude as the width of the intensity of the window in which 
-    #the fitting is being done. NB: free variation of the gamma parameter of the Voigt model does not work well.
-
+    '''
+    define the inital Voigt variables: centre as the centre found in the data so far, the width as the width of the 
+    window in which the peak has been defined, and the amplitude as the width of the intensity of the window in which 
+    the fitting is being done. NB: free variation of the gamma parameter of the Voigt model does not work well.
+    '''
     mod = Voigt_model  + lin_mod
             
     pars['V_center'].set(approx_centre)
