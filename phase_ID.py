@@ -18,7 +18,6 @@ more of an idea about the kind of way that matplotlib can plot something like th
 At the bottom of this programme there is an example set of data in a comment that can be run through to see what result to expect at the end.
 """
 
-
 import numpy as np
 
 """
@@ -365,11 +364,38 @@ assignment routines based on how many peaks were found. (see comment at top.)
 '''
 
 def main(peaks,lo_q):
-    if len(peaks)<4:
-        ID=La_HII_possible_phases(peaks,2)
-    else:
-        ID=Q_main(peaks,2,10,lo_q)
+    all_peaks=peaks
+
+    ID={}
+    i=0
+    #give tolerance of 1 unassignable peak in the data. 
+    while len(peaks)>1:
+        #discriminate what to test for based on number of peaks
+        if len(peaks)<4:
+            La_HII_ID=La_HII_possible_phases(peaks,2)
+            ID.update(La_HII_ID)
+        else:
+            Q_ID=Q_main(peaks,2,10,lo_q)        
+            ID.update(Q_ID)
+        
+        #now find which peaks have been assigned and which haven't, so that an iteration can try to assign them all
+        assigned_peaks=np.zeros(0)
+        for key in ID.keys():
+            assigned_peaks=np.append(assigned_peaks,ID[key][2])
+        
+        unassigned_peaks=np.setxor1d(assigned_peaks,all_peaks)
+        
+        peaks=unassigned_peaks
+        #loop 10 times. If it hasn't found something by this point then it's probably best to deal with it by hand.
+        i=i+1
+        if i>10:
+            break
+    #return any peaks that are unassigned
+    if len(peaks)>0:
+        ID['unassigned_peaks']=peaks
+    
     return ID
+
 '''
 #here is some example fake data which can be used to test the programme to see the expected output.
 #there is a Bonnet ratio linked QIIP and QIID phase, demonstrating that the phases can be *both* correctly identified
@@ -377,16 +403,19 @@ def main(peaks,lo_q):
 
 fundamental=0.06        
 QIIP=np.sqrt(np.array([2,4,6,8,10,12,14]))
-QIIP_peaks=np.random.normal(QIIP*fundamental,0.0005)
+QIIP_peaks=np.random.normal(QIIP*fundamental,0.0001)
 
 QIID=np.sqrt(np.array([2,3,4,6,8,9,10]))
-QIID_peaks=np.random.normal(QIID*fundamental*1.28,0.0005)
+QIID_peaks=np.random.normal(QIID*fundamental*1.28,0.0001)
 
 coexisting_Q_peaks=np.sort(np.concatenate((QIIP_peaks,QIID_peaks)))
 #print('P peaks, exact and slightly randomised: ',QIIP*fundamental,QIIP_peaks)
 #print('D peaks, exact and slightly randomised', QIID*fundamental*1.28, QIID_peaks)
-print('coexisting (randomised) D, P peaks: ', coexisting_Q_peaks)
+#print('coexisting (randomised) D, P peaks: ', coexisting_Q_peaks)
+La_test=np.array([0.09, 0.27])
 
-Q_test=main(coexisting_Q_peaks,0.06)
+test_La_Q_coex=np.sort(np.append(QIID_peaks,La_test))
+
+Q_test=main(test_La_Q_coex,0.06)
 print('\ndas ende', Q_test)
 '''
