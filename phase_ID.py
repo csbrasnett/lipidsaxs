@@ -147,7 +147,7 @@ def Q_possible_phases(peaks,bin_factor, threshold):
     values=np.concatenate((D,P,G))
     
     #histogram the data so that we have some bins
-    hist, bin_edges=np.histogram(values,bins=bin_factor*np.size(values))
+    hist, bin_edges=np.histogram(values,bins=np.int(bin_factor*np.size(values)))
     
     #digitise the data (see numpy docs for explanations)
     inds=np.digitize(values,bin_edges)
@@ -161,7 +161,6 @@ def Q_possible_phases(peaks,bin_factor, threshold):
             binned_values=values[np.where(inds==i)]
             #this size filtering is completely arbitrary. 
             if np.size(binned_values)>threshold:             
-                
                 #trace where the values in the bin originated from in the arrays.
                 positions_array=np.zeros(0)
                 for k in range(0, np.size(binned_values)):
@@ -234,6 +233,7 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                 As the coincidence of factors between the QIID and QIIP is high, attempt to clarify which phase
                 is actually present if the same factors have been assigned to the same peaks.
                 '''
+                
                 if len(D_sourced_factors) >3 and len(P_sourced_factors) >3:
                     lp=np.mean((np.mean(values[D_sourced]),np.mean(values[P_sourced])))
                     #find which set of values is longer and which is shorter
@@ -259,10 +259,10 @@ def Q_possible_phases(peaks,bin_factor, threshold):
                     if (len(matching_factors)==len(shorter_factors)) and (len(matching_peaks)==len(shorter_peaks)):
                         phase_dict[switch]=lp,longer_factors,longer_peaks
 
-                elif len(D_sourced_factors) >3 and len(P_sourced_factors) <3:
+                elif len(D_sourced_factors) >3 and len(P_sourced_factors) <4:
                     phase_dict[0] = np.mean(values[D_sourced]), D_sourced_factors, D_sourced_peaks                
                 
-                elif len(D_sourced_factors) <3 and len(P_sourced_factors) >3:
+                elif len(D_sourced_factors) <4 and len(P_sourced_factors) >3:
                     phase_dict[1] = np.mean(values[P_sourced]), P_sourced_factors, P_sourced_peaks                
                 
                 if len(G_sourced_factors) >3:
@@ -308,8 +308,8 @@ def Q_projection_testing(phase_array, fundamental, peak_array,lo_q):
         arbitrarily, if the difference in the lengths of the arrays is less than 2, (Ie. all peaks are present or only one or two 
         are missing in the data) then return a confirmation that the phase is a real assignment of the peaks.
         '''
-        matches=np.where(np.abs(np.subtract(projected_values,peak_array))<0.001)[0]
-        if np.abs(len(projected_values)-len(projected_values[np.unique(matches)]))<3:
+        matches=np.where(np.abs(np.subtract(projected_values,peak_array))<0.001)[0]        
+        if len(matches)>3:
             return 1
     #if the lowest peak is not in the desired q range
     else:
@@ -339,7 +339,7 @@ def Q_main(peaks,bin_factor,threshold,lo_q):
     QIIG_ratios=np.array([6,8,14,16,20,22,24])
         
     phases=Q_possible_phases(peaks,bin_factor,threshold)
-
+    print(phases)
     clar={}
     for key in phases.keys():
         fundamental=np.mean(phases[key][2]/np.sqrt(phases[key][1]))
@@ -363,7 +363,7 @@ start from the main: pass the low_q condition as the same value from finder.py, 
 assignment routines based on how many peaks were found. (see comment at top.)
 '''
 
-def main(peaks,lo_q):
+def main(peaks,lo_q,Q_bin_factor,Q_threshold,La_bin_factor):
     all_peaks=peaks
 
     ID={}
@@ -372,10 +372,10 @@ def main(peaks,lo_q):
     while len(peaks)>1:
         #discriminate what to test for based on number of peaks
         if len(peaks)<4:
-            La_HII_ID=La_HII_possible_phases(peaks,2)
+            La_HII_ID=La_HII_possible_phases(peaks,La_bin_factor)
             ID.update(La_HII_ID)
         else:
-            Q_ID=Q_main(peaks,2,10,lo_q)        
+            Q_ID=Q_main(peaks,Q_bin_factor,Q_threshold,lo_q)    
             ID.update(Q_ID)
         
         #now find which peaks have been assigned and which haven't, so that an iteration can try to assign them all
@@ -386,9 +386,9 @@ def main(peaks,lo_q):
         unassigned_peaks=np.setxor1d(assigned_peaks,all_peaks)
         
         peaks=unassigned_peaks
-        #loop 10 times. If it hasn't found something by this point then it's probably best to deal with it by hand.
+        #loop 5 times. If it hasn't found something by this point then it's probably best to deal with it by hand.
         i=i+1
-        if i>10:
+        if i>5:
             break
     #return any peaks that are unassigned
     if len(peaks)>0:

@@ -30,7 +30,7 @@ pass the following parameters to this function:
 import lmfit as lm
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import find_peaks_cwt
+from detect_peaks import detect_peaks
 
 def fitting(x,y,approx_centre,plot):
     #fit the peak using a convolution of an exponential function and a Voigt peak
@@ -73,58 +73,49 @@ def fitting(x,y,approx_centre,plot):
     return fitted_centre,result.redchi
 
 
-def finder(file_name,finding_sensitivity,lo_lim,hi_lim,fig):
+def finder(file_name,lo_lim,hi_lim,fig):
     table=np.genfromtxt(file_name,delimiter='\t')
     x=table[0:,0]
     y=table[0:,1]
     
     #have a first go at finding the approximate position of the peaks in the data
-    first_pass_peaks=find_peaks_cwt(y, np.arange(1,finding_sensitivity))
+    ind=detect_peaks(y,mpd=10)
     
     #limit the low and high q noise; return the peaks' positions as an element index in the I array 
     second_pass_peaks=np.zeros(0)
-    for i in range(0,len(first_pass_peaks)):
-        if x[first_pass_peaks[i]]>lo_lim and x[first_pass_peaks[i]]<hi_lim:
-            second_pass_peaks=np.append(second_pass_peaks,first_pass_peaks[i])
-    second_pass_peaks=np.trim_zeros(second_pass_peaks,'f')
-  
+    for i in range(0,len(ind)):
+        if x[ind[i]]>lo_lim and x[ind[i]]<hi_lim:
+            second_pass_peaks=np.append(second_pass_peaks,ind[i])
+    second_pass_peaks=np.trim_zeros(second_pass_peaks.astype(dtype=int),'f')
+
+
     #now use lmfit to try to fit the peak properly
     fitted_centre=np.zeros(0)
-
     for i in range(0,len(second_pass_peaks)):       
-        #give a range over which to fit the data from the integer indexed found peak in the data
-        for j in range(3,10):
-            fit_range=j
-            x_range=x[int(second_pass_peaks[i])-fit_range:int(second_pass_peaks[i])+fit_range]
-            y_range=y[int(second_pass_peaks[i])-fit_range:int(second_pass_peaks[i])+fit_range]
-            
-            fit=fitting(x_range,y_range,x[int(second_pass_peaks[i])],0)
+        #give a range over which to fit the data from the integer indexed found peak in the data  
+        fit_range=7
+        x_range=x[int(second_pass_peaks[i])-fit_range:int(second_pass_peaks[i])+fit_range]
+        y_range=y[int(second_pass_peaks[i])-fit_range:int(second_pass_peaks[i])+fit_range]
         
-            fitted_centre=np.append(fitted_centre,fit)
-    #sometimes the same peak is picked up more than once. This attempts to remove degeneracy from the central_peaks array
-    true_peaks=np.zeros(0)
+        #pass the data to fit to the fitting function.
+        fit=fitting(x_range,y_range,x[int(second_pass_peaks[i])],0)
+    
+        fitted_centre=np.append(fitted_centre,fit)
+    
+    #filter the fitted peaks again to ensure that they're within the correct search range.
+    returning_peaks=np.zeros(0)
     for i in range(0,len(fitted_centre)):
-        #test for peaks which are very (unphysically) close to each other
-        test=np.abs(fitted_centre-fitted_centre[i])
-        degen=np.where(test<0.01)
-        
-        #keep peaks which are on their own, take the average of ones which are close - although they should be the same from the fit.
-        if(np.size(degen)==1):
-            true_peaks=np.append(true_peaks,fitted_centre[degen])
-        elif(np.size(degen)>1):
-            average=np.mean(fitted_centre[degen])
-            true_peaks=np.append(true_peaks,average)
+        if fitted_centre[i]>lo_lim and fitted_centre[i]<hi_lim:
+            returning_peaks=np.append(returning_peaks,fitted_centre[i])
 
-    #find the array of unique, non-degenerate, central, peaks.
-    true_peaks=np.unique(true_peaks)
     #plot the data with lines through the peaks found if you want.
     if fig==1:    
         plt.semilogy(x,y)
         plt.xlim(lo_lim,hi_lim)
         plt.xlabel('q (Å$^{-1}$)')
         plt.ylabel('Intensity (A.U.)')
-        for k in range(0,len(true_peaks)):
-            plt.axvline(true_peaks[k],c='g')
+        for k in range(0,len(returning_peaks)):
+            plt.axvline(returning_peaks[k],c='g')
         plt.show()
     
-    return true_peaks
+    return returning_peaks
