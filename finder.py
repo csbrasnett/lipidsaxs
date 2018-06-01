@@ -63,7 +63,7 @@ def fitting(x,y,approx_centre,height_threshold,plot=False):
     height=result.params['V_amplitude'].value
     
     #eliminate terrible fits
-    if height>0.0001 and fitted_centre<max(x) and fitted_centre>min(x):
+    if height>height_threshold and fitted_centre<max(x) and fitted_centre>min(x):
         #in case you want to look at the fit in each case
         if plot==True:
             comps=result.eval_components(x=np.arange(x[0],x[-1],0.0001))
