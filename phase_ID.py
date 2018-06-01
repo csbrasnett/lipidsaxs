@@ -339,7 +339,6 @@ def Q_main(peaks,bin_factor,threshold,lo_q):
     QIIG_ratios=np.array([6,8,14,16,20,22,24])
         
     phases=Q_possible_phases(peaks,bin_factor,threshold)
-    print(phases)
     clar={}
     for key in phases.keys():
         fundamental=np.mean(phases[key][2]/np.sqrt(phases[key][1]))
