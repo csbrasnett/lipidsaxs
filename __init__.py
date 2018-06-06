@@ -5,3 +5,5 @@ author: Chris Brasnett, University of Bristol, christopher.brasnett@bristol.ac.u
 
 """
 
+from .finder import finder
+from .phase_ID import main
