@@ -34,6 +34,7 @@ pass the following parameters to this function:
 import numpy as np
 import matplotlib.pyplot as plt
 import lmfit as lm
+import os 
 
 def fitting(x,y,approx_centre,height_threshold,plot=False):
     #fit the peak using a convolution of an exponential function and a Voigt peak
@@ -84,7 +85,7 @@ def fitting(x,y,approx_centre,height_threshold,plot=False):
         return fitted_centre,sigma,height
     else: return 0
 
-def finder(file_name,lower_limit,upper_limit,min_sep, Ganesha=False,DLS=False,plot=False):
+def finder(file_name,lower_limit,upper_limit,min_sep, Ganesha=False,DLS=False,plot=False,savefig=False,savedir=os.path.dirname(os.path.realpath(__file__))):
     
     try:
         if Ganesha==True:
@@ -115,42 +116,47 @@ def finder(file_name,lower_limit,upper_limit,min_sep, Ganesha=False,DLS=False,pl
             
             if result != 0:
                 peaks=np.append(peaks, result[0])
-              
-        #define the minimum separation between peaks - otherwise the binning of the data will put separate peaks into one bin.
-        #bin the peaks found during the fitting procedure
-        hist, bin_edges=np.histogram(peaks,bins=np.arange(min(peaks), max(peaks) + min_sep, min_sep))
-        inds=np.digitize(peaks,bin_edges)
         
-        returning_peaks=np.zeros(0)
-        for i in range(0, np.size(np.arange(min(peaks), max(peaks) + min_sep, min_sep))):
-            try:
-                #look forwards and backward to catch each bin incase the values have leaked between boundaries
-                previous_bin=peaks[np.where(inds==(i-1))]
-                this_bin=peaks[np.where(inds==i)]
-                next_bin=peaks[np.where(inds==(i+1))]
-                
-                #if two bins are next to each other, group them together and average those values to return
-                if len(this_bin)>0 and len(previous_bin)>0 and len(next_bin)==0:
-                    conc_bin=np.concatenate((this_bin,previous_bin))
-                    returning_peaks=np.append(returning_peaks,np.mean(conc_bin))
-                
-                #otherwise just average the bin and return it as the peak.
-                elif len(this_bin)>0 and len(previous_bin)==0 and len(next_bin)==0:
-                    returning_peaks=np.append(returning_peaks,np.mean(this_bin))
+        if len(peaks)>0:    
+            #define the minimum separation between peaks - otherwise the binning of the data will put separate peaks into one bin.
+            #bin the peaks found during the fitting procedure
+            hist, bin_edges=np.histogram(peaks,bins=np.arange(min(peaks), max(peaks) + min_sep, min_sep))
+            inds=np.digitize(peaks,bin_edges)
+            
+            returning_peaks=np.zeros(0)
+            for i in range(0, np.size(np.arange(min(peaks), max(peaks) + min_sep, min_sep))):
+                try:
+                    #look forwards and backward to catch each bin incase the values have leaked between boundaries
+                    previous_bin=peaks[np.where(inds==(i-1))]
+                    this_bin=peaks[np.where(inds==i)]
+                    next_bin=peaks[np.where(inds==(i+1))]
                     
-            except IndexError:
-                pass
-            
-        if plot==True:
-            plt.plot(x_data,y_data)
-            for i in returning_peaks:
-                plt.axvline(i,c='r')
-            plt.xlabel('q (Å$^{-1}$)')
-            plt.ylabel('Intensity (A.U.)')
-            plt.show()
-            plt.clf()
-            
-        return returning_peaks
-
+                    #if two bins are next to each other, group them together and average those values to return
+                    if len(this_bin)>0 and len(previous_bin)>0 and len(next_bin)==0:
+                        conc_bin=np.concatenate((this_bin,previous_bin))
+                        returning_peaks=np.append(returning_peaks,np.mean(conc_bin))
+                    
+                    #otherwise just average the bin and return it as the peak.
+                    elif len(this_bin)>0 and len(previous_bin)==0 and len(next_bin)==0:
+                        returning_peaks=np.append(returning_peaks,np.mean(this_bin))
+                        
+                except IndexError:
+                    pass
+                
+            if plot==True:
+                plt.plot(x_data,y_data)
+                for i in returning_peaks:
+                    plt.axvline(i,c='r')
+                plt.xlabel('q (Å$^{-1}$)')
+                plt.ylabel('Intensity (A.U.)')
+                if savefig==True:
+                    name=file_name.split('\\')[-1][:-4]
+                    plt.savefig(savedir+'/'+name+'.png',dpi=200)
+                plt.show()
+                plt.clf()
+                
+            return returning_peaks
+        else:
+            return 0
     except UnboundLocalError:
         print('Error! You must tell the programme where the data was collected in order to use the peak finder.')
