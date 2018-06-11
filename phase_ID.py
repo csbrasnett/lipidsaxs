@@ -35,7 +35,7 @@ pass the following parameters to this function:
                  bin_factor value and the length of the flattened matrix of possible lattice parameter values. Take care such
                  that this value must make the bins values an integer.
 """
-def La_HII_possible_phases(peaks,bin_factor):
+def La_HII_possible_phases(peaks):
     La_ratios=np.array([1,2,3])[:,np.newaxis]
     HII_ratios=np.sqrt(np.array([1,3,4])[:,np.newaxis])
     
@@ -47,7 +47,7 @@ def La_HII_possible_phases(peaks,bin_factor):
     
     values=np.concatenate((La,HII))
     
-    hist,bin_edges=np.histogram(values,bins=bin_factor*np.size(values))
+    hist,bin_edges=np.histogram(values,bins=2*np.size(values))
     
     inds=np.digitize(values,bin_edges)-1 
     
@@ -112,7 +112,7 @@ pass the following parameters to this function:
 
 
 """
-def Q_possible_phases(peaks,bin_factor, threshold):
+def Q_possible_phases(peaks, threshold):
         
     #define the characteristic peak ratios
     QIID=np.array([2,3,4,6,8,9,10,11])[:,np.newaxis]
@@ -146,8 +146,8 @@ def Q_possible_phases(peaks,bin_factor, threshold):
     
     values=np.concatenate((D,P,G))
     
-    #histogram the data so that we have some bins
-    hist, bin_edges=np.histogram(values,bins=np.int(bin_factor*np.size(values)))
+    #histogram the data so that we have some bins. bin number increase is arbitrary.
+    hist, bin_edges=np.histogram(values,bins=np.int(2*np.size(values)))
     
     #digitise the data (see numpy docs for explanations)
     inds=np.digitize(values,bin_edges)
@@ -160,7 +160,7 @@ def Q_possible_phases(peaks,bin_factor, threshold):
             #find the values from the values array which are actually present in each bin and put them in the values array
             binned_values=values[np.where(inds==i)]
             #this size filtering is completely arbitrary. 
-            if np.size(binned_values)>threshold:             
+            if np.size(binned_values)>5:             
                 #trace where the values in the bin originated from in the arrays.
                 positions_array=np.zeros(0)
                 for k in range(0, np.size(binned_values)):
@@ -362,7 +362,7 @@ start from the main: pass the low_q condition as the same value from finder.py, 
 assignment routines based on how many peaks were found. (see comment at top.)
 '''
 
-def main(peaks,lo_q,Q_bin_factor,Q_threshold,La_bin_factor):
+def main(peaks,lo_q):
     all_peaks=peaks
 
     ID={}
@@ -371,10 +371,10 @@ def main(peaks,lo_q,Q_bin_factor,Q_threshold,La_bin_factor):
     while len(peaks)>1:
         #discriminate what to test for based on number of peaks
         if len(peaks)<4:
-            La_HII_ID=La_HII_possible_phases(peaks,La_bin_factor)
+            La_HII_ID=La_HII_possible_phases(peaks)
             ID.update(La_HII_ID)
         else:
-            Q_ID=Q_main(peaks,Q_bin_factor,Q_threshold,lo_q)    
+            Q_ID=Q_main(peaks,lo_q)    
             ID.update(Q_ID)
         
         #now find which peaks have been assigned and which haven't, so that an iteration can try to assign them all
