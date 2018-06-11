@@ -34,8 +34,6 @@ low_q=0.04
 #high q value to search for peaks in
 high_q=0.35
 
-#the minimum separation of the peaks
-peak_separation=0.01
 
 #do you want to save the overlaid figures? True if yes, False if not.
 save_figures=True
@@ -69,7 +67,7 @@ print("\rThe numbering of the files will be saved as %s onwards. If this doesn't
 p=1
 for i in files:
     print('Progress: %d/%d' %(p,len(files)))
-    test=lipidsaxs.finder(i,low_q,high_q,peak_separation,Ganesha=instrument_switch_Ganesha,DLS=instrument_switch_DLS,plot=in_IDE_plots,savefig=save_figures,savedir=fig_save_dir)
+    test=lipidsaxs.finder(i,low_q,high_q,Ganesha=instrument_switch_Ganesha,DLS=instrument_switch_DLS,plot=in_IDE_plots,savefig=save_figures,savedir=fig_save_dir)
     
     #change ordering here so that every file title is written, then phase is tested, then write phase info to file
     #if no phase info, then write 'none' or something

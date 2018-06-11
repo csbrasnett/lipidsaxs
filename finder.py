@@ -85,7 +85,7 @@ def fitting(x,y,approx_centre,height_threshold,plot=False):
         return fitted_centre,sigma,height
     else: return 0
 
-def finder(file_name,lower_limit,upper_limit,min_sep, Ganesha=False,DLS=False,plot=False,savefig=False,savedir=os.path.dirname(os.path.realpath(__file__))):
+def finder(file_name,lower_limit,upper_limit, Ganesha=False,DLS=False,plot=False,savefig=False,savedir=os.path.dirname(os.path.realpath(__file__))):
     
     try:
         if Ganesha==True:
@@ -120,11 +120,11 @@ def finder(file_name,lower_limit,upper_limit,min_sep, Ganesha=False,DLS=False,pl
         if len(peaks)>0:    
             #define the minimum separation between peaks - otherwise the binning of the data will put separate peaks into one bin.
             #bin the peaks found during the fitting procedure
-            hist, bin_edges=np.histogram(peaks,bins=np.arange(min(peaks), max(peaks) + min_sep, min_sep))
+            hist, bin_edges=np.histogram(peaks,bins=np.arange(min(peaks), max(peaks) + 0.01, 0.01))
             inds=np.digitize(peaks,bin_edges)
             
             returning_peaks=np.zeros(0)
-            for i in range(0, np.size(np.arange(min(peaks), max(peaks) + min_sep, min_sep))):
+            for i in range(0, np.size(np.arange(min(peaks), max(peaks) + 0.01, 0.01))):
                 try:
                     #look forwards and backward to catch each bin incase the values have leaked between boundaries
                     previous_bin=peaks[np.where(inds==(i-1))]
