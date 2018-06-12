@@ -20,11 +20,7 @@ path_to_lipidsaxs='your/folder/path/here/'
 #folder containing csvs of I vs q data
 data_folder='your/data/path/here/'
 
-#folder to save peak overlaid figures to
-fig_save_dir=os.path.dirname(os.path.realpath(__file__))
-
-#save the phase identification results as a text file in this directory
-text_save_dir=os.path.dirname(os.path.realpath(__file__))
+file_extensions='.csv'
 
 #some code parameters as explained in the documentation
 
@@ -34,9 +30,14 @@ low_q=0.04
 #high q value to search for peaks in
 high_q=0.35
 
-
 #do you want to save the overlaid figures? True if yes, False if not.
 save_figures=True
+
+#folder to save peak overlaid figures to
+fig_save_dir=os.path.dirname(os.path.realpath(__file__))
+
+#save the phase identification results as a text file in this directory
+text_save_dir=os.path.dirname(os.path.realpath(__file__))
 
 #show the plots being saved in the IDE as you go along?
 in_IDE_plots=True
@@ -51,7 +52,7 @@ end editable section
 sys.path.append(path_to_lipidsaxs)
 import lipidsaxs
 
-files=glob.glob(data_folder+'*.csv')
+files=glob.glob(data_folder+'*'+file_extensions)
 
 if instrument=='Ganesha':
     instrument_switch_Ganesha=True

@@ -31,9 +31,6 @@ correspondingly assigned.
 pass the following parameters to this function:
     peaks - an array of peaks that have previously been found elsewhere
     
-    bin_factor - a value to choose the number of bins. The number of bins in the histogram is calculated as the product of the 
-                 bin_factor value and the length of the flattened matrix of possible lattice parameter values. Take care such
-                 that this value must make the bins values an integer.
 """
 def La_HII_possible_phases(peaks):
     La_ratios=np.array([1,2,3])[:,np.newaxis]
@@ -102,17 +99,10 @@ the peaks that have been indexed, and the indicies assigned to the peak.
 
 pass the following parameters to this function:
     peaks - an array of peaks that have previously been found elsewhere
-    
-    bin_factor - a value to choose the number of bins. The number of bins in the histogram is calculated as the product of the 
-                 bin_factor value and the length of the flattened matrix of possible lattice parameter values. Take care such
-                 that this value must make the bins values an integer.
-    
-    threshold - a small number determining the threshold for filtering the bin population histogram when searching for matching 
-                values in the peak assignment histogram.
 
 
 """
-def Q_possible_phases(peaks, threshold):
+def Q_possible_phases(peaks):
         
     #define the characteristic peak ratios
     QIID=np.array([2,3,4,6,8,9,10,11])[:,np.newaxis]
@@ -322,23 +312,17 @@ the main module runs the above modules, passing the required data from one to th
 pass the following parameters to this function:
     peaks - an array of peaks that have previously been found elsewhere
     
-    bin_factor - a value to choose the number of bins. The number of bins in the histogram is calculated as the product of the 
-                 bin_factor value and the length of the flattened matrix of possible lattice parameter values. Take care such
-                 that this value must make the bins values an integer.
-    
-    threshold - a small number determining the threshold for filtering the bin population histogram when searching for matching 
-                values in the peak assignment histogram.
-    
     lo_q      - the same low limit in q that was used to define the width in which peaks are to be found
 
 """
-def Q_main(peaks,bin_factor,threshold,lo_q):
+def Q_main(peaks,lo_q):
 
     QIID_ratios=np.array([2,3,4,6,8,9,10,11])
     QIIP_ratios=np.array([2,4,6,8,10,12,14])
     QIIG_ratios=np.array([6,8,14,16,20,22,24])
         
-    phases=Q_possible_phases(peaks,bin_factor,threshold)
+    phases=Q_possible_phases(peaks)
+    
     clar={}
     for key in phases.keys():
         fundamental=np.mean(phases[key][2]/np.sqrt(phases[key][1]))

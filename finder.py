@@ -23,8 +23,6 @@ pass the following parameters to this function:
                          
     lower_limit, upper_limit - these are parameters specifying the low and high limits of the q range of where the peaks can be found.
     
-    min_sep - the minimum separation for the peaks in q.
-    
     Ganesha, DLS - optional in name, but not in practice. Where the data was taken (in house or at Diamond) will affect how some of 
                     the refinement routines behave. See the extended documentation for more details.
      
@@ -36,7 +34,7 @@ import matplotlib.pyplot as plt
 import lmfit as lm
 import os 
 
-def fitting(x,y,approx_centre,height_threshold,plot=False):
+def fitting(x,y,approx_centre,height_threshold,fitplot=False):
     #fit the peak using a convolution of an exponential function and a Voigt peak
     lin_mod = lm.models.LinearModel(prefix='lin_')
     pars = lin_mod.guess(y, x=x)
@@ -66,7 +64,7 @@ def fitting(x,y,approx_centre,height_threshold,plot=False):
     #eliminate terrible fits
     if height>height_threshold and fitted_centre<max(x) and fitted_centre>min(x):
         #in case you want to look at the fit in each case
-        if plot==True:
+        if fitplot==True:
             comps=result.eval_components(x=np.arange(x[0],x[-1],0.0001))
             plt.plot(x,y,'go',label='data')
             plt.plot(x,result.best_fit, 'r',label='result fit to data')
@@ -79,8 +77,7 @@ def fitting(x,y,approx_centre,height_threshold,plot=False):
             plt.ylabel('Intensity (A.U.)')
             plt.show()
             plt.clf()
-            #print(result.fit_report())
-            print(fitted_centre,sigma,height)
+            print(result.fit_report())
         #return the results that meet the conditions
         return fitted_centre,sigma,height
     else: return 0
