@@ -117,11 +117,11 @@ def finder(file_name,lower_limit,upper_limit, Ganesha=False,DLS=False,plot=False
         if len(peaks)>0:    
             #define the minimum separation between peaks - otherwise the binning of the data will put separate peaks into one bin.
             #bin the peaks found during the fitting procedure
-            hist, bin_edges=np.histogram(peaks,bins=np.arange(min(peaks), max(peaks) + 0.01, 0.01))
+            hist, bin_edges=np.histogram(peaks,bins=np.arange(min(peaks), max(peaks) + 0.005, 0.005))
             inds=np.digitize(peaks,bin_edges)
             
             returning_peaks=np.zeros(0)
-            for i in range(0, np.size(np.arange(min(peaks), max(peaks) + 0.01, 0.01))):
+            for i in range(0, np.size(np.arange(min(peaks), max(peaks) + 0.005, 0.005))):
                 try:
                     #look forwards and backward to catch each bin incase the values have leaked between boundaries
                     previous_bin=peaks[np.where(inds==(i-1))]
@@ -144,7 +144,7 @@ def finder(file_name,lower_limit,upper_limit, Ganesha=False,DLS=False,plot=False
                 plt.plot(x_data,y_data)
                 for i in returning_peaks:
                     plt.axvline(i,c='r')
-                plt.xlabel('q (Å$^{-1}$)')
+                plt.xlabel('$q$ (Å$^{-1}$)')
                 plt.ylabel('Intensity (A.U.)')
                 if savefig==True:
                     name=file_name.split('\\')[-1][:-4]
