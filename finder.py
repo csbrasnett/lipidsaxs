@@ -8,7 +8,7 @@ author: Chris Brasnett, University of Bristol, christopher.brasnett@bristol.ac.u
 It works by fitting a convolution of a Voigt peak and a linear background to a continous window of data throughout a given q range.
 Refinement then happens to clarify the true positions of peaks in the
 
-NB: The fitting range is hard-coded as a 15 point window in the discretised data, so care 
+NB: The fitting range is hard-coded as a 10 point window in the discretised data, so care 
 should be taken with regards to this fact if you are fitting data with much broader peaks. The programme will then remove peaks
 which have been found multiple times by the inital search. If a figure of the q vs. I(q) data overlaid with lines where the 
 peaks have been fitted to in q is wanted, this can then be displayed if wanted - defined by one of the programme parameters.
@@ -23,7 +23,7 @@ pass the following parameters to this function:
                          
     lower_limit, upper_limit - these are parameters specifying the low and high limits of the q range of where the peaks can be found.
     
-    Ganesha, DLS - optional in name, but not in practice. Where the data was taken (in house or at Diamond) will affect how some of 
+    Ganesha, DLS (Diamond Light Source, UK) - optional in name, but not in practice. Where the data was taken (in house at Bristol uni SAXS facility or at Diamond) will affect how some of 
                     the refinement routines behave. See the extended documentation for more details.
      
     fig - optional, set as True if you want to see a figure of the peaks found overlaid on the data passed to the function.
