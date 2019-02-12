@@ -82,16 +82,48 @@ def fitting(x,y,approx_centre,height_threshold,fitplot=False):
         return fitted_centre,sigma,height
     else: return 0
 
-def finder(file_name,lower_limit,upper_limit, Ganesha=False,DLS=False,plot=False,savefig=False,savedir=os.path.dirname(os.path.realpath(__file__))):
+def b(Ganesha=False,DLS=False,plot=False,**kwargs):
+    if Ganesha==True:
+        delim_str=','
+        ht_threshold=0.0001
+        
+    elif DLS==True:
+        delim_str='\t'
+        ht_threshold=0.1
     
     try:
-        if Ganesha==True:
-            delim_str=','
-            ht_threshold=0.0001
-            
-        if DLS==True:
-            delim_str='\t'
-            ht_threshold=0.1
+        ht_threshold = kwargs['ht_threshold']
+        return delim_str,ht_threshold
+    
+    except KeyError:
+        return delim_str,ht_threshold
+        pass
+
+def a(G_flag=False,DLS_flag=False,ht_value=None):
+    if ht_value is None:
+        t = b(Ganesha = G_flag,DLS = DLS_flag)
+    else:
+        k={'ht_threshold':ht_value}
+        t= b(Ganesha = G_flag,DLS = DLS_flag, **k)
+    return t
+        
+
+def finder(file_name,lower_limit,upper_limit, Ganesha=False,DLS=False,plot=False,savefig=False,savedir=os.path.dirname(os.path.realpath(__file__)),ht_thresh=None):
+    
+    pars = a(G_flag = Ganesha, DLS_flag = DLS,ht_value = ht_thresh)
+    delim_str=pars[0]
+    ht_threshold=pars[1]
+    
+    try:
+#        if Ganesha==True:
+#            delim_str=','
+#            ht_threshold=0.0001
+#            
+#        if DLS==True:
+#            delim_str='\t'
+#            ht_threshold=0.1
+#            
+        
             
         #get the data from the file
         table=np.genfromtxt(file_name,delimiter=delim_str,skip_header=10)
@@ -114,45 +146,47 @@ def finder(file_name,lower_limit,upper_limit, Ganesha=False,DLS=False,plot=False
             if result != 0:
                 peaks=np.append(peaks, result[0])
         
-        if len(peaks)>0:    
-            #define the minimum separation between peaks - otherwise the binning of the data will put separate peaks into one bin.
-            #bin the peaks found during the fitting procedure
-            hist, bin_edges=np.histogram(peaks,bins=np.arange(min(peaks), max(peaks) + 0.005, 0.005))
-            inds=np.digitize(peaks,bin_edges)
+        #define the minimum separation between peaks - otherwise the binning of the data will put separate peaks into one bin.
+        #bin the peaks found during the fitting procedure
+        #assume that an isolated peak is just fitted noise
+
+        hist, bin_edges=np.histogram(peaks,bins=np.arange(min(peaks), max(peaks) + 0.005, 0.005))
+        inds=np.digitize(peaks,bin_edges)
+        
+        returning_peaks=np.zeros(0)
+        for i in range(0, np.size(np.arange(min(peaks), max(peaks) + 0.005, 0.005))):
+            try:
+                #look forwards and backward to catch each bin incase the values have leaked between boundaries
+                previous_bin=peaks[np.where(inds==(i-1))]
+                this_bin=peaks[np.where(inds==i)]
+                next_bin=peaks[np.where(inds==(i+1))]
+                
+                #if two bins are next to each other, group them together and average those values to return
+                if len(this_bin)>0 and len(previous_bin)>0 and len(next_bin)==0:
+                    conc_bin=np.concatenate((this_bin,previous_bin))
+                    returning_peaks=np.append(returning_peaks,np.mean(conc_bin))
+                    
+                #otherwise just average the bin and return it as the peak.
+                elif len(this_bin)>0 and len(previous_bin)==0 and len(next_bin)==0:
+                    returning_peaks=np.append(returning_peaks,np.mean(this_bin))
+
+            except IndexError:
+                pass
             
-            returning_peaks=np.zeros(0)
-            for i in range(0, np.size(np.arange(min(peaks), max(peaks) + 0.005, 0.005))):
-                try:
-                    #look forwards and backward to catch each bin incase the values have leaked between boundaries
-                    previous_bin=peaks[np.where(inds==(i-1))]
-                    this_bin=peaks[np.where(inds==i)]
-                    next_bin=peaks[np.where(inds==(i+1))]
-                    
-                    #if two bins are next to each other, group them together and average those values to return
-                    if len(this_bin)>0 and len(previous_bin)>0 and len(next_bin)==0:
-                        conc_bin=np.concatenate((this_bin,previous_bin))
-                        returning_peaks=np.append(returning_peaks,np.mean(conc_bin))
-                    
-                    #otherwise just average the bin and return it as the peak.
-                    elif len(this_bin)>0 and len(previous_bin)==0 and len(next_bin)==0:
-                        returning_peaks=np.append(returning_peaks,np.mean(this_bin))
-                        
-                except IndexError:
-                    pass
-                
-            if plot==True:
-                plt.plot(x_data,y_data)
-                for i in returning_peaks:
-                    plt.axvline(i,c='r')
-                plt.xlabel('$q$ (Å$^{-1}$)')
-                plt.ylabel('Intensity (A.U.)')
-                if savefig==True:
-                    name=file_name.split('\\')[-1][:-4]
-                    plt.savefig(savedir+'/'+name+'.png',dpi=200)
-                plt.show()
-                plt.clf()
-                
-            return returning_peaks
+        if plot==True:
+            plt.plot(x_data,y_data)
+            for i in returning_peaks:
+                plt.axvline(i,c='r')
+            plt.xlabel('$q$ (Å$^{-1}$)')
+            plt.ylabel('Intensity (A.U.)')
+            if savefig==True:
+                name=file_name.split('\\')[-1][:-4]
+                plt.savefig(savedir+'/'+name+'.png',dpi=200)
+            plt.show()
+            plt.clf()
+
+        if len(returning_peaks)>0:
+            return returning_peaks, x_data, y_data
         else:
             return 0
     except UnboundLocalError:
