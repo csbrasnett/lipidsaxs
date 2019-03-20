@@ -39,10 +39,12 @@ high_q=0.35
 save_figures=True
 
 #folder to save peak overlaid figures to
-fig_save_dir=os.path.dirname(os.path.realpath(__file__))
+#if you put os.path.dirname(os.path.realpath(__file__)) for these options then the figures will be saved to the same folder that this script is executed in.
+fig_save_dir= 'path/here'
 
 #save the phase identification results as a text file in this directory
-text_save_dir=os.path.dirname(os.path.realpath(__file__))
+#as above with os.path.dirname(os.path.realpath(__file__))
+text_save_dir= 'path/here'
 
 #show the plots being saved in the IDE as you go along?
 in_IDE_plots=True
