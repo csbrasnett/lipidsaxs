@@ -115,16 +115,6 @@ def finder(file_name,lower_limit,upper_limit, Ganesha=False,DLS=False,plot=False
     ht_threshold=pars[1]
     
     try:
-#        if Ganesha==True:
-#            delim_str=','
-#            ht_threshold=0.0001
-#            
-#        if DLS==True:
-#            delim_str='\t'
-#            ht_threshold=0.1
-#            
-        
-            
         #get the data from the file
         table=np.genfromtxt(file_name,delimiter=delim_str,skip_header=10)
         
