@@ -84,19 +84,19 @@ def fitting(x,y,approx_centre,height_threshold,fitplot=False):
 
 def b(Ganesha=False,DLS=False,plot=False,**kwargs):
     if Ganesha==True:
-        delim_str=','
+        #delim_str=','
         ht_threshold=0.0001
         
     elif DLS==True:
-        delim_str='\t'
+        #delim_str='\t'
         ht_threshold=0.1
     
     try:
         ht_threshold = kwargs['ht_threshold']
-        return delim_str,ht_threshold
+        return ht_threshold#,delim_str
     
     except KeyError:
-        return delim_str,ht_threshold
+        return ht_threshold#,delim_str
         pass
 
 def a(G_flag=False,DLS_flag=False,ht_value=None):
@@ -111,12 +111,11 @@ def a(G_flag=False,DLS_flag=False,ht_value=None):
 def finder(file_name,lower_limit,upper_limit, Ganesha=False,DLS=False,plot=False,savefig=False,savedir=os.path.dirname(os.path.realpath(__file__)),ht_thresh=None):
     
     pars = a(G_flag = Ganesha, DLS_flag = DLS,ht_value = ht_thresh)
-    delim_str=pars[0]
-    ht_threshold=pars[1]
+    ht_threshold=pars
     
     try:
         #get the data from the file
-        table=np.genfromtxt(file_name,delimiter=delim_str,skip_header=10)
+        table=np.genfromtxt(file_name,skip_header=10)
         
         #cut out the x and y data defined by the q range.
         x_data=table[np.intersect1d(np.where(table[0:,0]>lower_limit),np.where(table[0:,0]<upper_limit)),0]
